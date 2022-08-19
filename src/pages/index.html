@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zealous chat application</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="container">
+        <div class="col-lg-6 offset-lg-3">
+          <div v-if="ready === 'ChatRoom'">
+            <div class="row mb-2">
+              <div class="col-12">
+                <span class="h4">Create a chat room</span>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-12">
+                <form @submit.prevent="addChatRoom">
+                  <div class="row">
+                    <div class="col-8">
+                      <div class="form-group">
+                        <input
+                          type="text"
+                          class="form-control"
+                          v-model="chatRoomName"
+                          placeholder="Enter chat room name here"
+                        />
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <div class="form-group">
+                        <input
+                          type="submit"
+                          value="Create"
+                          class="btn btn-sm btn-info"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div v-if="chatRooms.length > 0">
+              <div class="row mt-4">
+                <div class="col-12">
+                  <span class="h4">Available chat rooms</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-12">
+                  <div class="border m-2">
+                    <div
+                      v-for="(chatRoom, i) in chatRooms"
+                      :key="i"
+                      class="border-bottom p-2"
+                    >
+                      <div class="row">
+                        <div class="col-2">
+                          <span>{{i+1}}.</span>
+                        </div>
+                        <div class="col-7">
+                          <span>{{ chatRoom }}</span>
+                        </div>
+                        <div class="col-3">
+                          <form @submit.prevent="joinRoom(i)">
+                            <input
+                              type="submit"
+                              value="Join"
+                              class="btn btn-sm btn-info ml-1"
+                            />
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="ready === 'UserName'">
+            <div class="row">
+              <div class="col-12 border m-2">
+                <span class="h4">Room name: {{activeChatRoom}}</span>
+              </div>
+            </div>
+            <div class="row mt-4">
+              <div class="col-12">
+                <span class="h5">Enter username:</span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <form @submit.prevent="addUserName">
+                  <div class="row">
+                    <div class="col-8">
+                      <div class="form-group">
+                        <input
+                          type="text"
+                          class="form-control"
+                          v-model="username"
+                          placeholder="Enter username"
+                        />
+                      </div>
+                    </div>
+                    <div class="col-4">
+                      <input
+                        type="submit"
+                        value="Join"
+                        class="btn btn-sm btn-info ml-1"
+                      />
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Section -->
+          <div v-if="ready === 'Chat'">
+            <div class="row">
+              <div class="col-12 border p-2">
+                <span class="h4">{{ noOfPeopleOnline }} Users in room:</span>
+              </div>
+            </div>
+            <div class="row mt-4">
+              <div class="col-12 border p-2">
+                <span class="h5" v-if="peopleOnline.length == 0"
+                  >No one is online</span
+                >
+                <span class="h5" v-else>People online</span>
+              </div>
+            </div>
+            <div v-for="(people, i) in peopleOnline" :key="i">
+              <div class="row border p-2">
+                <div class="col-2">{{i+1}}.</div>
+                <div class="col-10">{{ people }}</div>
+              </div>
+            </div>
+            <div class="row mt-4">
+              <div class="col-12">
+                <span class="h5">Messages:</span>
+              </div>
+            </div>
+            <div
+              class="row mt-2 border"
+              style="height: 150px; max-height: 150px; overflow: scroll"
+            >
+              <div class="col-12">
+                <div class="row" v-for="(message, i) in messages" :key="i">
+                  <div class="col-12 boder-bottom p-1">
+                    <span class="text-info">{{message.user}}:</span>
+                    <span>{{message.message}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-12">
+                <form @submit.prevent="send">
+                  <div class="form-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="newMessage"
+                      placeholder="Enter message"
+                    />
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-12 text-center">
+                <form @submit.prevent="leaveRoom">
+                  <div class="form-group">
+                    <input
+                      type="submit"
+                      value="Leave room"
+                      class="btn btn-sm btn-info ml-1"
+                    />
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://unpkg.com/vue@next"></script>
+
+    <script>
+      const socket = io();
+      const { createApp, ref, watch, reactive, watchEffect } = Vue;
+
+      const Chat = {
+        name: "Chat",
+
+        setup() {
+          let chatRoomName = ref(null);
+          let newMessage = ref(null);
+          //   let userName = ref(null);
+          let typing = ref(false);
+          let ready = ref("ChatRoom");
+          let noOfPeopleOnline = ref(null);
+          let peopleOnline = reactive([]);
+          let info = reactive([]);
+          let connections = ref(0);
+          let activeChatRoom = ref(null);
+          let chatRooms = reactive([]);
+          const messages = reactive([]);
+          const username = ref(null);
+
+          socket.emit("listRooms");
+
+          socket.on("storeRoom", (roomDetails) => {
+            chatRooms.splice(0, chatRooms.length);
+            roomDetails.map((item) => {
+              chatRooms.push(item);
+            });
+          });
+
+          socket.on("addUserSuccess", () => {
+            ready.value = "Chat";
+            socket.emit("getOnlinePeople", { roomId: activeChatRoom.value });
+          });
+
+          socket.on("onlinePeopleSuccess", (data) => {
+            noOfPeopleOnline.value = data.noOfPeopleOnline;
+            peopleOnline.splice(0, peopleOnline.length);
+            data.peopleOnline.map((item) => peopleOnline.push(item.userName));
+          });
+
+          socket.on("receiveMessage", (msg) => {
+            messages.push({
+              message: msg.msg,
+              type: 0,
+              user: msg.currentUser,
+            });
+          });
+
+          function send() {
+            if (!newMessage.value) return;
+            socket.emit("sendMessage", {
+              msg: newMessage.value,
+              roomId: activeChatRoom.value,
+            });
+            newMessage.value = null;
+          }
+
+          function addUser() {
+            ready.value = "Chat";
+            socket.emit("joined", username.value);
+          }
+
+          function addChatRoom() {
+            if (chatRoomName.value !== null) {
+              socket.emit("createChatRoom", {
+                roomId: chatRoomName.value,
+              });
+              socket.emit("listRooms");
+
+              username.value = null;
+              chatRoomName.value = null;
+            }
+          }
+
+          function joinRoom(value) {
+            activeChatRoom.value = chatRooms[value];
+            activeChatRoom.roomId = value;
+            ready.value = "UserName";
+          }
+
+          function addUserName() {
+            socket.emit("joinRoom", {
+              roomId: activeChatRoom.value,
+              userName: username.value,
+            });
+          }
+
+          function leaveRoom() {
+            socket.emit("leaveRoom", { roomId: activeChatRoom.value });
+            ready.value = "ChatRoom";
+          }
+
+          return {
+            addUser,
+            send,
+            addChatRoom,
+            joinRoom,
+            addUserName,
+            leaveRoom,
+            noOfPeopleOnline,
+            peopleOnline,
+            activeChatRoom,
+            chatRoomName,
+            chatRooms,
+            newMessage,
+            messages,
+            typing,
+            username,
+            ready,
+            info,
+            connections,
+          };
+        },
+      };
+
+      createApp(Chat).mount("#app");
+    </script>
+  </body>
+</html>
